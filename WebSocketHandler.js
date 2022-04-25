@@ -20,16 +20,40 @@ server.listen(3000, () => {
 //server clientdan mesaj beklemeli ve gelen mesajı odadaki tüm kullanıcılara broadcast etmeli
 
 io.on("connection", (socket) => {
-    let socketID;
+    let socketID; //should store the socketID 
     socketID = socket.id
     console.log("baglandi komutanim o7")
+
+
     socket.on("join room", (data) => {
         console.log("odaya giriş yapıldı")
         let getAll = getUsers().find(x => x.socketID == socket.id)
-        if(getAll !== undefined) {
+        let roomGet = getUsers().find(x => x.roomname == data.roomName)
+        if(getAll !== undefined) { //handle if the participant switches the room without leaving the current room
             removeUser(socket.id)
         }
-        let newUser = joinUser(socket.id, data.username, data.roomName)
+
+        let newUser;
+        if(roomGet == undefined) { //truthy if the user will be the room creator
+
+            /*TODO: get the anime name from the creator of the room then if some participant joins the room get the current anime 
+            name from the participant's browser if participant has a different anime page open 
+            navigate the participant to the anime page we fetched before from the room creator */
+
+            newUser = joinUser(socket.id, data.username, data.roomName, data.location) 
+
+        } else {
+
+            //if not room creator
+
+            newUser = joinUser(socket.id, data.username, data.roomName, null) 
+            let fetchOptions = getUsers().find(x => x.creatorOptions.currentlyWatching)
+            console.log("options:", fetchOptions)
+            socket.emit("changeLocation", {
+                changeTo: fetchOptions.creatorOptions.currentlyWatching
+            })
+        }
+
         socket.emit("send data", {
             id: socket.id,
             username: newUser.username,
