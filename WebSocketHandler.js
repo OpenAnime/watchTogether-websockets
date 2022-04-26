@@ -63,6 +63,15 @@ io.on("connection", (socket) => {
         console.log(newUser)
     })
 
+    socket.on("changeVideoStatus", (data) => {
+        let getUser = getUsers().find(x => x.socketID == socket.id)
+        if(getUser !== undefined) { //shouldn't use io.in(...).emit() cuz it will create a loop. We should send the message to all participants in the room except the sender
+            socket.broadcast.to(getUser.roomname).emit("videoStatusChanged", data)
+        } else {
+            console.log("undefined verdi lan")
+        } 
+    })
+
     socket.on("serverMessage", async(data) => {
         let getUser = getUsers().find(x => x.socketID == socket.id)
         if(getUser !== undefined) {
